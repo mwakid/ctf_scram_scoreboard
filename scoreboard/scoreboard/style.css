@@ -1,0 +1,26 @@
+
+html, body {
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+    padding: 0;
+}
+ 
+#appLayout {
+    height: 100%;
+}
+#twitterFeed {
+    width: 14em;
+    width: 300px;
+}
+ 
+.claro .demoLayout .edgePanel {
+    background-color: #d0e9fc;
+    height: 210px;
+}
+ 
+#viewsChart {
+    width: 550px;
+    height: 550px;
+}
+

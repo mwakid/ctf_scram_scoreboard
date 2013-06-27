@@ -1,0 +1,4 @@
+continent,country,network,netmask,src_addr,dst_addr,next_hop,input_iface,output_iface,pkts_sent,bytes_sent,start_time,end_time,src_port,dst_port,ip_proto,tos,src_as,dst_as,src_mask,dst_mask,tcp_flag_ACK,tcp_flag_CWR,tcp_flag_ECE,tcp_flag_FIN,tcp_flag_PSH,tcp_flag_RST,tcp_flag_SYN,tcp_flag_URG,flow_time
+UNK,UNK,10.0.0.0,8,10.0.0.0,224.0.0.1,0.0.0.0,0,0,1,46,1970-01-01 00:13:16,1970-01-01 00:13:16,0,0,OTHER,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0
+UNK,UNK,192.168.2.0,16,192.168.2.116,192.168.2.185,0.0.0.0,0,0,7,508,2106-02-07 06:28:15,1970-01-01 00:55:32,56219,22,TCP,0,0,0,0,0,1,0,0,0,1,0,0,0,-4294963963.0
+UNK,UNK,192.168.2.0,16,192.168.2.185,192.168.2.116,0.0.0.0,0,0,4,480,2106-02-07 06:28:15,1970-01-01 00:55:32,22,56219,TCP,0,0,0,0,0,1,0,0,0,1,0,0,0,-4294963963.0
