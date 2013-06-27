@@ -48,19 +48,21 @@ $3DJS.init = function ( settings ) {
 		//		canvas_id - the id of the canvas to draw on
 		//		width -
 		//      height - 
-		//
+		//		domNode - the dom node to place the canvas into
 	
 		settings = settings || { };
 	
 		// Create the HTML5 canvas and add it to the document body
 		var canvas = document.getElementById( settings.canvas_id );
-		
+		if(settings.domNode == null){
+			settings.domNode = document.body;
+		}
 		if ( canvas == null ) {
 		
 				var canvas = document.createElement('canvas');
 				canvas.id = settings.canvas_id || 'canvas3djs';	
 				canvas.setAttribute( 'tabindex', '1' );			
-				document.body.appendChild(canvas);
+				settings.domNode.appendChild(canvas);
 				
 		}
 		
@@ -178,11 +180,15 @@ window.onresize = function ( ) {
 					
 		// resize the canvas 	
 		var canvas = document.getElementById( "canvas3djs" );  // this element should be stored in a variable instead of retrieved from the DOM each time
-		canvas.style.width = window.innerWidth;
-		canvas.style.height = window.innerHeight;
+		if(settings.domNode!=null){
+			//ignore the resize	
+		}else{
+			canvas.style.width = window.innerWidth;
+			canvas.style.height = window.innerHeight;
 		
-		gl.canvas.width  = window.innerWidth;
-		gl.canvas.height = window.innerHeight;
+			gl.canvas.width  = window.innerWidth;
+			gl.canvas.height = window.innerHeight;
+		}
 		//gl.canvas.width   	   = gl.canvas.clientWidth;
 		//gl.canvas.height  	   = gl.canvas.clientHeight;
 		
