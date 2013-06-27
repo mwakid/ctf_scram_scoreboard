@@ -1,7 +1,7 @@
 define(["dojo/_base/lang", "dojo/_base/declare", "dijit/_WidgetBase", "dijit/_Container", "dijit/_Contained", "dijit/_TemplatedMixin", "dojo/text!scoreboard/templates/twit.html"], function(lang, Declare, _WidgetBase, _Container, _Contained, _TemplatedMixin, template) {
 	return Declare("scoreboard.twit", [_WidgetBase, _TemplatedMixin, _Contained, _Container], {
 		///
-		/// This is the class for the main UI
+		/// This is the class for the Twitter widget
 		///
 		templateString : template,
 		args : null, //property ba
@@ -32,3 +32,4 @@ define(["dojo/_base/lang", "dojo/_base/declare", "dijit/_WidgetBase", "dijit/_Co
 	});
 
 });
+
