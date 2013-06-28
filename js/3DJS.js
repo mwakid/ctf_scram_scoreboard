@@ -180,15 +180,15 @@ window.onresize = function ( ) {
 					
 		// resize the canvas 	
 		var canvas = document.getElementById( "canvas3djs" );  // this element should be stored in a variable instead of retrieved from the DOM each time
-		if(settings.domNode!=null){
+		//if(settings.domNode!=null){
 			//ignore the resize	
-		}else{
-			canvas.style.width = window.innerWidth;
-			canvas.style.height = window.innerHeight;
+		//}else{
+		//	canvas.style.width = window.innerWidth;
+		//	canvas.style.height = window.innerHeight;
 		
-			gl.canvas.width  = window.innerWidth;
-			gl.canvas.height = window.innerHeight;
-		}
+			//gl.canvas.width  = window.innerWidth;
+		//	gl.canvas.height = window.innerHeight;
+		//}
 		//gl.canvas.width   	   = gl.canvas.clientWidth;
 		//gl.canvas.height  	   = gl.canvas.clientHeight;
 		
@@ -6068,7 +6068,7 @@ $3DJS.Graph.prototype = {
 				$3DJS.previousTime = currentTime;
 			
 				// Clear the label canvas
-				if ( this.settings.renderNodeLabels ) {
+				if (this.settings.renderNodeLabels ) {
 										
 						this.labelCanvas.context.clearRect( 0, 0, gl.canvas.width, gl.canvas.height );
 				

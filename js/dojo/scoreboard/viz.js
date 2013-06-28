@@ -1,37 +1,49 @@
 define(["dojo/_base/lang", "dojo/_base/declare", "dijit/_WidgetBase", "dijit/_Container", "dijit/_Contained", "dijit/_TemplatedMixin", "dojo/dom-geometry", "dojo/text!scoreboard/templates/viz.html"], function(lang, Declare, _WidgetBase, _Container, _Contained, _TemplatedMixin, domGeometry, template) {
 	return Declare("scoreboard.viz", [_WidgetBase, _TemplatedMixin, _Contained, _Container], {
 		///
-		/// This is the class for the main UI
+		/// This is the class for the 3djs viz
 		///
 		templateString : template,
-		args : null, //property ba
+		args : null,
+		socket : null,
 
 		constructor : function(args) {
-			this.args = args;
-
+			this.socket = args.socket;
+			this.socket.on("message", lang.hitch(this, this.onVizMsg));
+			this.rendered = false;
 		},
 		buildRendering : function() {
 			this.inherited(arguments);
 		},
-		// AJAX request to read from graph file and load graph object when the response is returned
-		LoadGraph : function(filename, type) {
+		onVizMsg : function(event) {
+			var obj = JSON.parse(event.data);
+			console.log("viz obj", obj);
 
-			var request = new XMLHttpRequest();
+			this.graph.addNode(new $3DJS.Node({
+				id : obj.srcaddr,
+				color : [1.0, 1.0, 1.0, 1.0],
+				size : 15,
+				imageUrl : "textures/network.png"
+			}));
 
-			request.open("GET", filename, false);
+			this.graph.addNode(new $3DJS.Node({
+				id : obj.dstaddr,
+				color : [1.0, 1.0, 1.0, 1.0],
+				size : 15,
+				imageUrl : "textures/network.png"
+			}));
 
-			request.onreadystatechange = function() {
-
-				if (request.readyState == 4 && request.status == 200) {
-
-					this.loadCSV(request.responseText);
-
-				}
-
+			this.graph.addEdge({
+				source : this.graph.nodes[this.graph.nodeLookupArray[obj.srcaddr]],
+				dest : this.graph.nodes[this.graph.nodeLookupArray[obj.dstaddr]]
+			});
+			this.graph.nodeObj.updateVertexBuffers();
+			this.graph.edgeObj.updateVertexBuffers();
+			
+			if(!this.rendered){
+				this.graph.render();
+				this.rendered = true;
 			}
-
-			request.send();
-
 		},
 		// Loads a CSV file
 		loadCSV : function(responseText) {
@@ -50,25 +62,6 @@ define(["dojo/_base/lang", "dojo/_base/declare", "dijit/_WidgetBase", "dijit/_Co
 
 				var vars = lines[i].split(",");
 
-				/*
-				edgeArray[i-1] = {
-
-				edgeid: vars[0],
-				guid1: vars[1],
-				guid2: vars[2],
-				lastnameaps: vars[3],
-				middlenameaps: vars[4],
-				firstnameaps: vars[5],
-				streetaps: vars[6],
-				cityaps: vars[7],
-				stateaps: vars[8],
-				zipaps: vars[9],
-				phoneaps: vars[10],
-				iddocaps: vars[11],
-				tcs: vars[12]
-
-				}
-				*/
 				// For some reason the line after the last row with text is being read in. This is to avoid that line.
 				if (vars[0] == "")
 					continue;
@@ -77,34 +70,20 @@ define(["dojo/_base/lang", "dojo/_base/declare", "dijit/_WidgetBase", "dijit/_Co
 					id : vars[4],
 					color : [1.0, 1.0, 1.0, 1.0],
 					size : 15,
-					imageUrl : "textures/network.png",
-					//imageRegion: {
-					//	left: 0.0,
-					//	right: 0.125,
-					//	bottom: 0.875,
-					//	top: 1.0
-					//}
+					imageUrl : "textures/network.png"
 				}));
 
 				this.graph.addNode(new $3DJS.Node({
 					id : vars[5],
 					color : [1.0, 1.0, 1.0, 1.0],
 					size : 15,
-					imageUrl : "textures/network.png",
-					//imageRegion: {
-					//	left: 0.0,
-					//	right: 0.125,
-					//	bottom: 0.875,
-					//	top: 1.0
-					//}
+					imageUrl : "textures/network.png"
 				}));
 
 				if (vars[4] != vars[5]) {// do not add an edge if the source and destination nodes are the same node
-
 					this.graph.addEdge({
 						source : this.graph.nodes[this.graph.nodeLookupArray[vars[4]]],
 						dest : this.graph.nodes[this.graph.nodeLookupArray[vars[5]]]
-						//weight: weight
 					});
 				}
 			}
@@ -120,8 +99,6 @@ define(["dojo/_base/lang", "dojo/_base/declare", "dijit/_WidgetBase", "dijit/_Co
 
 		},
 		postCreate : function() {
-			//console.log($3DJS);
-
 			$3DJS.init({
 				domNode : this.domNode,
 				width : 1400
@@ -148,10 +125,9 @@ define(["dojo/_base/lang", "dojo/_base/declare", "dijit/_WidgetBase", "dijit/_Co
 			this.g_nodeArray = [];
 
 			// Load graph data
-			this.LoadGraph("data/output.csv");
+			//this.LoadGraph("data/output.csv");
 
 			// Draw the graph
-			this.graph.render();
 
 			this.inherited(arguments);
 		},
