@@ -9,14 +9,14 @@ define(["dojo/_base/lang", "dojo/_base/declare", "dijit/_WidgetBase", "dijit/_Co
 
 		constructor : function(args) {
 			this.socket = args.socket;
-			this.socket.on("message", lang.hitch(this, this.onVizMsg));
+			this.socket.on("graph", lang.hitch(this, this.onVizMsg));
 			this.rendered = false;
 		},
 		buildRendering : function() {
 			this.inherited(arguments);
 		},
-		onVizMsg : function(event) {
-			var obj = JSON.parse(event.data);
+		onVizMsg : function(obj) {
+			//var obj = JSON.parse(event.data);
 			//console.log("viz obj", obj);
 
 			this.graph.addNode(new $3DJS.Node({

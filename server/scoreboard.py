@@ -1,4 +1,4 @@
-from twisted.internet.protocol import DatagramProtocol
+from twisted.internet.protocol import DatagramProtocol, Protocol, ServerFactory
 from twisted.internet import reactor
 import dpkt, json
 from autobahn.websocket import WebSocketServerFactory, \
@@ -10,6 +10,9 @@ class Collector(DatagramProtocol):
     def datagramReceived(self, data, (host, port)):      
         self.observer(data)
 
+class Score(Protocol):
+    def dataReceived(self, data):
+        self.factory.observer(data)
         
 class PollServerProtocol(WebSocketServerProtocol):
        
@@ -32,9 +35,16 @@ class Scoreboard():
     def __init__(self,reactor=reactor):
         self.reactor = reactor
         self.frontEndListeners={}
+        
         self.collector = Collector()
         self.collector.observer = self._handlePoll
         self.reactor.listenUDP(6006, self.collector)
+        
+        self.scoreFactory = ServerFactory()
+        self.scoreFactory.protocol = Score
+        self.scoreFactory.observer = self._handleScore
+        self.reactor.listenTCP(6007,self.scoreFactory)
+        
         self._setUpListener("poll", 9081, PollServerProtocol,self._handlePoll)
         self.reactor.run()
         
@@ -46,15 +56,24 @@ class Scoreboard():
         l.reverse()
         return ".".join(l)   
     
+    def _handleScore(self,data):
+        resp = json.loads(data)
+        resp['cmd'] = 'score'
+        print "Score Resp: %s sending to %s connections"%(resp, str(len(self.frontEndListeners['poll'].connections)))          
+        if len(self.frontEndListeners['poll'].connections) > 0:
+            for con in self.frontEndListeners['poll'].connections:
+                con.sendMessage(json.dumps(resp))        
+    
     def _handlePoll(self,data):
         nf = dpkt.netflow.Netflow5(data) 
         
         for record in nf.data:
 
-            resp = {'srcaddr':self.numIP2strIP(record.src_addr),
+            resp = {'cmd':'graph',
+                 'srcaddr':self.numIP2strIP(record.src_addr),
                  'dstaddr':self.numIP2strIP(record.dst_addr),
                  'bytes':record.bytes_sent}
-        #make a json obj out of the setflow data
+            
             print "Netflow Resp: %s sending to %s connections"%(resp, str(len(self.frontEndListeners['poll'].connections)))          
             if len(self.frontEndListeners['poll'].connections) > 0:
                 for con in self.frontEndListeners['poll'].connections:
