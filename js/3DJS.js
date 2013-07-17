@@ -49,20 +49,26 @@ $3DJS.init = function ( settings ) {
 		//		width -
 		//      height - 
 		//		domNode - the dom node to place the canvas into
+
 	
 		settings = settings || { };
 	
 		// Create the HTML5 canvas and add it to the document body
 		var canvas = document.getElementById( settings.canvas_id );
-		if(settings.domNode == null){
-			settings.domNode = document.body;
+		
+		if ( settings.domNode == null ) {
+			
+				settings.domNode = document.body;
+		
 		}
+		
 		if ( canvas == null ) {
 		
-				var canvas = document.createElement('canvas');
+				var canvas = document.createElement( 'canvas' );
 				canvas.id = settings.canvas_id || 'canvas3djs';	
 				canvas.setAttribute( 'tabindex', '1' );			
-				settings.domNode.appendChild(canvas);
+				//document.body.appendChild(canvas);
+				settings.domNode.appendChild( canvas );
 				
 		}
 		
@@ -91,7 +97,10 @@ $3DJS.init = function ( settings ) {
 		$3DJS.backgroundColor = settings.backgroundColor ? settings.backgroundColor : [ 1.0, 1.0, 1.0, 1.0 ];
 			
 		// Interactor
-		this.interactor = new Interactor( );
+		settings.userInputHandler = settings.userInputHandler ? settings.userInputHandler : function( ) { };
+		this.interactor = new Interactor({
+			userInputHandler: settings.userInputHandler	
+		});
 		
 }
 
@@ -180,15 +189,17 @@ window.onresize = function ( ) {
 					
 		// resize the canvas 	
 		var canvas = document.getElementById( "canvas3djs" );  // this element should be stored in a variable instead of retrieved from the DOM each time
-		//if(settings.domNode!=null){
-			//ignore the resize	
-		//}else{
-		//	canvas.style.width = window.innerWidth;
-		//	canvas.style.height = window.innerHeight;
 		
-			//gl.canvas.width  = window.innerWidth;
-		//	gl.canvas.height = window.innerHeight;
-		//}
+		// This should resized to the size of the element the canvas in contained in (ignore for the moment)
+		
+		/*
+		canvas.style.width = window.innerWidth;
+		canvas.style.height = window.innerHeight;
+		
+		gl.canvas.width  = window.innerWidth;
+		gl.canvas.height = window.innerHeight;
+		*/
+		
 		//gl.canvas.width   	   = gl.canvas.clientWidth;
 		//gl.canvas.height  	   = gl.canvas.clientHeight;
 		
@@ -225,7 +236,7 @@ window.requestAnimationFrame = ( function ( ) {
  * Custom events for user interaction with the scene (e.g. clicking on nodes and edges in the graph)
  */
 
-
+/*
 var edgeClickEvent = new CustomEvent(
 	"onEdgeClick",
 	{
@@ -237,6 +248,7 @@ var edgeClickEvent = new CustomEvent(
 		cancelable: true
 	}
 );
+*/
 
 /**
  * This file is used to integrating HTML elements and CSS into our visualizations  
@@ -2544,17 +2556,13 @@ Sphere.prototype.setColor = function ( r, g, b, a ) {
  * @description Collects keyboard and mouse input from the user
  */
 
-function Interactor ( userSettings ) {
+function Interactor ( settings ) {
 	
 		// Key dictionary storing true for keys that are pressed and false for those that are now
 		this.currentlyPressedKeys = {};
 	
-		userSettings = userSettings || {};
-		
-		var settings = {
-			
-		};
-			
+		settings = settings || { };
+	
 		// Variables for mouse controls
 		this.leftMouseDown   = false;
 		this.middleMouseDown = false;
@@ -2580,7 +2588,7 @@ function Interactor ( userSettings ) {
 		this.translationSpeed = 50.0;		
 		this.rotationSpeed  = 3.0;    // this needs more than one type of speed and to be passed in as a parameter
 		
-		this.handleCustomInput = function( ) { };
+		this.handleCustomInput = settings.userInputHandler;
 		
 		initInputCallbacks( );
 		
@@ -3553,9 +3561,9 @@ vec3.set = function ( a, x, y, z ) {
 
 vec3.copy = function ( a, b ) { 
 		
-		a[0] = b[0];	
-    	a[1] = b[1];	
-    	a[2] = b[2];   
+		b[0] = a[0];	
+    	b[1] = a[1];	
+    	b[2] = a[2];   
 
 }
 
@@ -3612,9 +3620,10 @@ vec3.magnitude = function ( a ) {
 		
 }
 
-vec3.normalize = function ( a ) {
+// This function needs to be tested ( currently not working )
+vec3.normalize = function ( a, result ) {
 	
-		vec3.divide( a, vec3.magnitude( a ) );
+		vec3.divide( a, vec3.magnitude( a ), result );
 		
 }
 
@@ -4211,22 +4220,26 @@ function Particle ( config ) {
 		config = config || {};
 	
 		// Color 
-		this.color = config.color ? config.color : vec4.create( 0.0, 0.0, 0.0, 0.0 );
+		this.color = config.color ? config.color : vec4.create( 1.0, 1.0, 1.0, 1.0 );
+	
+		// Size
+		this.size = config.size ? config.size : 1.0;
+	
+		// Target location the particle is moving towards 
+		this.source_position = config.source_position ? config.source_position : vec3.create( 0.0, 0.0, 0.0 );
+		
+		// Target location the particle is moving towards 
+		this.dest_position = config.dest_position ? config.dest_position : vec3.create( 0.0, 0.0, 0.0 );
 	
 		// Position
-		this.position = config.position ? config.position : vec3.create( 0.0, 0.0, 0.0 );	
+		this.position = vec3.create( this.source_position[0], this.source_position[1], this.source_position[2] );
 		
 		// Velocity
+		this.speed = config.speed ? config.speed : 1.0;
 		this.velocity = config.velocity ? config.velocity : vec3.create( ); 		
 		
 		// Acceleration		
 		this.acceleration = config.acceleration ? config.acceleration : vec3.create( );	
-		
-		// Target location the particle is moving towards 
-		this.startPosition = config.startPosition ? config.startPosition : vec3.create( 0.0, 0.0, 0.0 );
-		
-		// Target location the particle is moving towards 
-		this.targetPosition = config.targetPosition ? config.targetPosition : vec3.create( 0.0, 0.0, 0.0 );
 		
 		// How long the particle lasts before it is destroyed (time in seconds)
 		this.lifespan = config.lifespan ? config.lifespan :  1.5;
@@ -4265,36 +4278,46 @@ function ParticleSystem ( ) {
 		this.currTime = 0;
 		this.prevTime = 0;
 		
-		this.init = function ( ) {
+		// Initialization call
+		this.initialize();
+		
+}
+
+ParticleSystem.prototype = {
+	
+		initialize: function ( ) {
 		
 				this.particleObj = new $3DJS.Quad( 1, 1 );
 	
-				this.particleObj.setColor( 1.0, 0.0, 0.0, 1.0 );		
+				this.particleObj.setColor( 1.0, 1.0, 1.0, 1.0 );		
 							  						 
 				this.particleObj.texture = createImageTexture( "textures/particle.png", gl.TEXTURE_2D, gl.RGBA, gl.UNSIGNED_BYTE, gl.LINEAR );			 
 			
-				this.particleObj.shaderProgram[0] = loadShader( 'billboardS', setupBillboardSShader ); 
-
-		} 
+				this.particleObj.shaderProgram[0] = loadShader( 'billboard', setupBillboardShader ); 
+	
+		},
 		
 		// Spawns a new particle at the emitter location
-		this.emitParticle = function ( data ) {
+		emitParticle: function ( data ) {
 			
 				this.particles.push( new Particle( data ) );
-				
+					
 				++this.numParticles;
 			
-		}
+		},
 		
-		this.destroy = function ( ) {
+		// Removes a particle from the system by index
+		destroyParticle: function ( index ) {
 			
-				this.particles = [];
-				this.numParticles = 0;
+				this.particles.splice( i, 1 );
+				this.numParticles--;
 			
-		}
+		},
 		
-		// Updates the positions of all the particles in the system, and destroys and creates new ones as necessary
-		this.update = function ( ) {
+		// This function will need to be different depending on how the user would like to design the animation
+		update: function ( data ) {
+			
+				// Get elapsed time (this may be able to be removed)
 			
 				this.currTime = new Date().getTime();
 				
@@ -4303,8 +4326,9 @@ function ParticleSystem ( ) {
 				
 				this.timer += elapsedTimeMs;
 				
-				// emits a new particle				
 				
+				// emits a new particle (how ti)				
+				/*
 				if ( this.timer > 1 ) {
 					
 						this.emitParticle({
@@ -4319,18 +4343,54 @@ function ParticleSystem ( ) {
 						this.timer = 0;
 					
 				}
-				
+				*/
 			
-				// update particle positions
+				// iterate through each particle in the system and update 
 			
 				var i = this.numParticles;
+				var particle;
 				
+				var distance_from_source_to_dest, distance_from_source_to_particle;
 				var difference = vec3.create();
-				var distance;
+				var direction = vec3.create();
 				
-			
 				while ( i-- ) { 
 					
+					particle = this.particles[i];
+							
+					// Calculate distance from the current particle position to the source position 				
+					vec3.subtract( particle.position, particle.source_position, difference );
+					distance_from_source_to_particle = vec3.magnitude( difference );
+					
+					// Calculate distance from the source position to the destination position			
+					vec3.subtract( particle.dest_position, particle.source_position, difference );
+					distance_from_source_to_dest = vec3.magnitude( difference );			
+					vec3.divide( difference, distance_from_source_to_dest, direction );
+									
+					// If the particle has traveled ti the destination position, remove it from the particle system				
+					if (distance_from_source_to_particle >= distance_from_source_to_dest) {
+						
+							this.destroyParticle( i );
+							
+							//vec3.copy( particle.source_position, particle.position );
+							
+							 
+					} else {
+						
+							//this.particleSystem.particles[i].position[0] += direction[0] * this.particleSystem.particles[i].velocity[0];
+							//this.particleSystem.particles[i].position[1] += direction[1] * this.particleSystem.particles[i].velocity[1];
+							//this.particleSystem.particles[i].position[2] += direction[2] * this.particleSystem.particles[i].velocity[2];
+						
+							// We will update the particles positions in the below fashion since we are working with force directed graphs
+							// and the nodes and edges are likely to be moving at each frame. This will correct for that movement. 
+							
+							particle.position[0] = particle.source_position[0] + direction[0] * distance_from_source_to_particle + direction[0] * particle.speed;
+							particle.position[1] = particle.source_position[1] + direction[1] * distance_from_source_to_particle + direction[1] * particle.speed;
+							particle.position[2] = particle.source_position[2] + direction[2] * distance_from_source_to_particle + direction[2] * particle.speed;
+					}
+	
+					
+						/* particle lives until its lifetime has been exceed 
 						if ( this.particles[i].lifetime >= this.particles[i].lifespan ) {
 							
 								this.particles.splice( i, 1 );
@@ -4343,6 +4403,7 @@ function ParticleSystem ( ) {
 				
 						// update position from the particle velocity
 						vec3.add( this.particles[i].position, this.particles[i].velocity, this.particles[i].position );
+						*/
 				
 						/*
 						vec3.subtract( this.particles[i].targetPosition, this.particles[i].position, difference ); 								
@@ -4363,12 +4424,12 @@ function ParticleSystem ( ) {
 				
 				}	
 			
-				this.prevTime = this.currTime;
+				this.prevTime = this.currTime;			
 			
-		}
+		},
 		
 		// Renders the particle system
-		this.render = function ( nodepos ) { 
+		render: function ( nodepos ) {
 			
 				// Render particles ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 				var program = this.particleObj.shaderProgram[0];   		   		
@@ -4389,9 +4450,7 @@ function ParticleSystem ( ) {
 			   	
 			   	// Bind uniforms that are constant for all nodes in the cascade
 				gl.uniformMatrix4fv( program.pMatrixUniform,  false, $3DJS.PMatrix );
-			  	gl.uniformMatrix4fv( program.mvMatrixUniform, false, $3DJS.MVMatrix );	  
-			  	
-			  	gl.uniform1f( program.scaleUniform, 10.0 ); 
+			  	gl.uniformMatrix4fv( program.mvMatrixUniform, false, $3DJS.MVMatrix );	  			  				  
 			  	
 			  	gl.activeTexture( gl.TEXTURE0 );
 			  	gl.bindTexture( gl.TEXTURE_2D, this.particleObj.texture ); 		
@@ -4412,11 +4471,12 @@ function ParticleSystem ( ) {
 						   		   		   		   	
 			   	while ( i-- ) {
 			   		
-			   			var pos = vec3.create();
-			   			vec3.add( this.particles[i].position, nodepos, pos );
+			   			//var pos = vec3.create();
+			   			//vec3.add( this.particles[i].position, nodepos, pos );
 			   					  						
-			   			gl.uniform3fv( program.worldPosUniform, pos );     // this should be a custom function not one for universally rendering billboards
-			   			gl.uniform4fv( program.colorUniform, this.particles[i].color );		
+			   			gl.uniform3fv( program.worldPosUniform, this.particles[i].position );     // this should be a custom function not one for universally rendering billboards
+			   			gl.uniform4fv( program.colorUniform, this.particles[i].color );	
+			   			gl.uniform1f( program.scaleUniform, this.particles[i].size ); 
 			   			gl.drawElements( this.particleObj.drawMode, this.particleObj.elementArrayBuffer.count, gl.UNSIGNED_SHORT, 0 );	   			
 				
 			   	}
@@ -4428,9 +4488,17 @@ function ParticleSystem ( ) {
 				gl.disableVertexAttribArray( attributes[ 'position' ] );
 				gl.disableVertexAttribArray( attributes[ 'texCoords' ] ); 	
 			
-		}
+		},
 		
-}
+		// Empties the particle system
+		destroy: function ( ) {
+			
+				this.particles = [];
+				this.numParticles = 0;
+			
+		}
+	
+};
 
 /**
  * 3DJS node object.
@@ -4788,6 +4856,13 @@ $3DJS.Graph = function ( config ) {
 		this.edgeLabelObj = undefined;
 		
 		/**
+		 * Particle system to animate graph edges
+		 * 
+		 * @private
+		 */
+		this.particleSystem = null;
+		
+		/**
 		 * Frame buffer object to render graph objects into for picking/selecting
 		 * 
 		 * @private
@@ -4877,6 +4952,9 @@ $3DJS.Graph.prototype = {
 						
 						// Color of the text written on the node. Defaults to black '#000000'.
 						nodeLabelSize : config.nodeLabelSize ? config.nodeLabelSize : 1.0,
+						
+						// Offsets a node's label by a certain amount from the center of the node
+						nodeLabelOffset : config.nodeLabelOffset ? config.nodeLabelOffset : { x: 0, y: 0 },
 			
 						// Specifies the edge color as a rgba vector. Defaults to black ([0.0, 0.0, 0.0, 1.0]).
 						edgeColor: config.edgeColor ? config.edgeColor : [ 0.7, 0.7, 0.7, 1.0 ],
@@ -4888,9 +4966,16 @@ $3DJS.Graph.prototype = {
 						edgeHighlightColor: config.edgeHighlightColor ? config.edgeHighlightColor : [0.0, 1.0, 0.0, 1.0],
 						
 						// Specifies whether or not the spatial partitioning should be displayed in addition to the graph
-						renderSpatialPartition: config.renderSpatialPartition ? config.renderSpatialPartition : false
+						renderSpatialPartition: config.renderSpatialPartition ? config.renderSpatialPartition : false,
+						
+						// Specifies whether or not to animate the edges on the graph (could be temporary)
+						animateEdges: config.animateEdges ? config.animateEdges : false
 										
 				};
+				
+				// Initialize the particle
+				if ( this.settings.animateEdges )
+					this.particleSystem = new ParticleSystem( );
 				
 				// Initialize the edge render object to a line array
 				this.edgeObj = new $3DJS.LineArray( );
@@ -5604,7 +5689,7 @@ $3DJS.Graph.prototype = {
 													
 						}
 						*/	
-					   	
+						
 		    	}		  
 		    	    		
 		    	for ( var i=0; i < this.edgeObj.numRequiredBuffers; i++ ) {
@@ -6068,7 +6153,7 @@ $3DJS.Graph.prototype = {
 				$3DJS.previousTime = currentTime;
 			
 				// Clear the label canvas
-				if (this.settings.renderNodeLabels ) {
+				if ( this.settings.renderNodeLabels ) {
 										
 						this.labelCanvas.context.clearRect( 0, 0, gl.canvas.width, gl.canvas.height );
 				
@@ -6103,7 +6188,8 @@ $3DJS.Graph.prototype = {
 				
 				
 				// Update the particles (add into updateEdges function to reduce the number of loops)				
-				// this.updateParticles( );							
+				if ( this.particleSystem )
+					this.particleSystem.update( );							
 				
 		},
 			
@@ -6135,7 +6221,11 @@ $3DJS.Graph.prototype = {
 					this.layout.octree.render();
 			
 				// Draw the graph
-				this.draw( );					
+				this.draw( );	
+				
+				// Draw the particle system
+				if ( this.particleSystem )
+					this.particleSystem.render();				
 				
 				// Process user keyboard input
 				$3DJS.interactor.handleInput( );
@@ -6214,7 +6304,8 @@ $3DJS.Graph.prototype = {
 				// Render edge labels //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 			   	//if ( this.renderEdgeLabels == true ) 
 			   	//	this.edgeLabelObj.render();
-			   	this.drawEdgeSelectors();
+			   	
+			   	//this.drawEdgeSelectors();
 				
 				// Render node labels using a fullscreen quad overlay
 				if ( this.settings.renderNodeLabels ) {
@@ -7000,7 +7091,7 @@ $3DJS.ForceDirectedLayout = function ( config ) {
 										var z_e = 2.0 * zNear * zFar / (zFar + zNear - z_n * (zFar - zNear));
 										
 								        if ( z_e > 0.0 )
-								       		graph.labelCanvas.context.fillText( nodes[i].id, windowPos[0], gl.canvas.height - windowPos[1] );  		
+								       		graph.labelCanvas.context.fillText( nodes[i].id, windowPos[0] + graph.settings.nodeLabelOffset.x, gl.canvas.height - windowPos[1] - graph.settings.nodeLabelOffset.y );  		
 								       		
 						       	}		
 							
@@ -7242,7 +7333,7 @@ $3DJS.ForceDirectedLayout = function ( config ) {
 								
 						        if ( z_e > 0.0 ) {
 						       							       	
-						       			graph.labelCanvas.context.fillText( nodes[i].id, windowPos[0], gl.canvas.height - windowPos[1] );
+						       			graph.labelCanvas.context.fillText( nodes[i].id, windowPos[0] + graph.settings.nodeLabelOffset.x, gl.canvas.height - windowPos[1] - graph.settings.nodeLabelOffset.y );  	
 						       							    
 						       	}  		
 						       		
